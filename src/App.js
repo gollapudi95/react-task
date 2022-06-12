@@ -1,80 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import axios from 'axios';
-import UsersList from './components/UsersList';
+import DataTable from './components/DataTable';
+import ProductsList from './components/ProductsList';
 
 const App = () => {
-  const [APIData, setAPIData] = useState([])
-  const [filteredResults, setFilteredResults] = useState([]);
-  const [searchInput, setSearchInput] = useState('');
+  const [data, setData] = useState([]);
+  const [products, setProducts] = useState([{ id: '', thumbnailUrl: '', title: '',url: '' }]);
+  const [isLoading, setIsLoading] = useState(false);
 
-
+  //Fetch the list of photos
   const fetchData = async () => {
     try {
-      const response = await axios.get(`https://api.github.com/users/mralexgray/repos`)
-      setAPIData(response.data);
-    } catch (err) {
-      console.log(err)
+      setIsLoading(true);
+      const photos = await axios.get(`https://jsonplaceholder.typicode.com/photos?_start=0&_limit=10`)
+      setData(photos.data);
+      setIsLoading(false);
+    }
+    catch (err) {
+      throw err;
     }
   }
 
   useEffect(() => {
     fetchData();
-  }, [])
+  }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (searchInput !== '') {
-      const filteredData = APIData.filter((item) => {
-        return Object.values(item).join('').toLowerCase().includes(searchInput.toLowerCase())
-      })
-      setFilteredResults(filteredData)
-    }
-    else {
-      setFilteredResults(APIData)
-    }
+  const handleCompare = (id, thumbnailUrl, title, url) => {
+    setProducts([...products, { id, thumbnailUrl, title, url }])
   }
 
+  const handleRemove = (id) => {
+    const filteredItems = products.filter(item => item.id !== id)
+    setProducts(filteredItems)
+  }
+
+
   return (
-    <center>
-      <div style={{position: 'fixed', overflow: 'hidden', top: '10px', width: '100%'}}>
-      <input type="search"
-        placeholder='Search...'
-        onChange={(e) => setSearchInput(e.target.value)}
-      />
-      <button onClick={handleSubmit}>Submit</button>
-      </div>
-      <div style={{ marginTop: '3rem' }}>
-        {searchInput.length > 1 ? (
-          filteredResults.map((item, index) => {
-            return (
-              <div key={index} style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-                <UsersList
-                  name={item.name}
-                  image={item.owner.avatar_url}
-                  description={item.description}
-                  language={item.language}
-                  id={item.id}
-                />
-              </div>
-            )
-          })
-        ) : (
-          APIData.map((item, index) => {
-            return (
-              <div key={index} style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-                <UsersList
-                  name={item.name}
-                  image={item.owner.avatar_url}
-                  description={item.description}
-                  language={item.language}
-                  id={item.id}
-                />
-              </div>
-            )
-          })
-        )}
-      </div>
-    </center>
+    <>
+      {isLoading ?
+        <center>Loading...</center> :
+        <>
+          <div className="main">
+            {data.map((item, index) => {
+              return <div key={index}><ProductsList item={item} handleCompare={handleCompare} handleRemove={handleRemove} /></div>;
+            })}
+          </div>
+          <DataTable products={products} />
+        </>
+      }
+    </>
   )
 }
+
 export default App;
