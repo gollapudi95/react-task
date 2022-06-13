@@ -1,55 +1,74 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios';
-import DataTable from './components/DataTable';
-import ProductsList from './components/ProductsList';
+import React, { useState } from "react";
+import Task from './components/TaskList';
+import CreateTask from './components/CreateTask';
+import "./App.css";
 
 const App = () => {
-  const [data, setData] = useState([]);
-  const [products, setProducts] = useState([{ id: '', thumbnailUrl: '', title: '',url: '' }]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [tasks, setTasks] = useState([
+    {
+      title: "Reactjs Assignment",
+      completed: false
+    },
+  ]);
 
-  //Fetch the list of photos
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const photos = await axios.get(`https://jsonplaceholder.typicode.com/photos?_start=0&_limit=10`)
-      setData(photos.data);
-      setIsLoading(false);
-    }
-    catch (err) {
-      throw err;
-    }
+//create a new task
+  const addTask = title => {
+    const newTasks = [...tasks, { title, completed: false }];
+    setTasks(newTasks);
+  };
+
+  const completeTask = index => {
+    const newTasks = [...tasks];
+    newTasks[index].completed = true;
+    setTasks(newTasks);
+  };
+  //removing task based on index
+  const removeTask = index => {
+    const newTasks = [...tasks];
+    newTasks.splice(index, 1);
+    setTasks(newTasks);
+  };
+  //filtering completed tasks 
+  const handleSelectComplete = () => {
+    const filterByComplete = tasks.filter((item) => item.completed);
+    setTasks(filterByComplete)
   }
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleCompare = (id, thumbnailUrl, title, url) => {
-    setProducts([...products, { id, thumbnailUrl, title, url }])
+  //filtering all tasks
+  const handleSelectAll = () => {
+    const filterByAll = tasks.filter((item) => item.title);
+    setTasks(filterByAll)
   }
-
-  const handleRemove = (id) => {
-    const filteredItems = products.filter(item => item.id !== id)
-    setProducts(filteredItems)
+  //filtering active tasks
+  const handleSelectActive = () => {
+    const filterByActive = tasks.filter((item) => !item.completed);
+    setTasks(filterByActive)
   }
 
 
   return (
-    <>
-      {isLoading ?
-        <center>Loading...</center> :
-        <>
-          <div className="main">
-            {data.map((item, index) => {
-              return <div key={index}><ProductsList item={item} handleCompare={handleCompare} handleRemove={handleRemove} /></div>;
-            })}
-          </div>
-          <DataTable products={products} />
-        </>
-      }
-    </>
-  )
-}
+    <div className="todo-container">
+      <div className="create-task" >
+        <CreateTask addTask={addTask} />
+      </div>
+      <div className="tasks">
+        {tasks.map((task, index) => (
+          <Task
+            task={task}
+            index={index}
+            completeTask={completeTask}
+            removeTask={removeTask}
+            key={index}
+          />
+        ))}
+      </div>
+      <div className="btn-container">
+        <button onClick={handleSelectAll} className="button">All</button>
+        <button onClick={handleSelectActive} className="button">Active</button>
+        <button onClick={handleSelectComplete} className="button">Complete</button>
+      </div>
+    </div>
+
+  );
+};
 
 export default App;
